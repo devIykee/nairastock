@@ -1,0 +1,18 @@
+{
+  "name": "@nairastock/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Testnet demo infrastructure: mock cNGN + tokenized stocks, a UniswapV2-style AMM standing in for Aerodrome, and mock Chainlink aggregators",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test -vv",
+    "fmt": "forge fmt",
+    "deploy:local": "tsx scripts/deploy.ts",
+    "deploy:sepolia": "tsx scripts/deploy.ts --network base-sepolia"
+  },
+  "devDependencies": {
+    "dotenv": "16.4.7",
+    "tsx": "4.19.2",
+    "typescript": "5.7.3"
+  }
+}
