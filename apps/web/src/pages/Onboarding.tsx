@@ -157,8 +157,8 @@ export function Onboarding() {
         </section>
       )}
 
-      {/* How-it-works band, 96px rhythm, white on white */}
-      <section id="how-it-works" className="bg-white py-[96px]">
+      {/* How-it-works band, 96px rhythm */}
+      <section id="how-it-works" className="py-[96px]" style={{ backgroundColor: theme === 'dark' ? 'var(--color-canvas)' : '#ffffff' }}>
         <div className="shell">
           <div className="max-w-2xl">
             <p className="caption-strong mb-3 uppercase tracking-wide" style={{ color: 'var(--color-muted)' }}>
