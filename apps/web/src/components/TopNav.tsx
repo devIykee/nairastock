@@ -35,7 +35,12 @@ export function TopNav({ children }: PropsWithChildren) {
             >
               Dashboard
             </Link>
-            <Link to="/trade" className="nav-link no-underline" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+            <Link
+              to="/trade"
+              className="nav-link no-underline"
+              style={{ fontSize: '0.875rem', fontWeight: 500 }}
+              data-tour="nav-trade"
+            >
               Trade
             </Link>
           </nav>

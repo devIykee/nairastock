@@ -129,7 +129,7 @@ export function Dashboard() {
       {/* Holdings + recent activity */}
       <div className="mt-8 grid gap-6 lg:grid-cols-5">
         <section className="lg:col-span-3">
-          <div className="card">
+          <div className="card" data-tour="portfolio-table">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="title-md" style={{ color: 'var(--color-ink)' }}>
                 Holdings

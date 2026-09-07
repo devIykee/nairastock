@@ -228,7 +228,7 @@ function SwapCard({
   const unitLabel = side === 'BUY' ? CASH : symbol;
 
   return (
-    <div className="card">
+    <div className="card" data-tour="swap-form">
       {/* Buy / Sell toggle */}
       <div
         className="inline-flex rounded-[100px] p-1"

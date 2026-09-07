@@ -23,6 +23,7 @@ function LinkOut({ href, label, className, compact }: Props & { href: string }) 
       target="_blank"
       rel="noreferrer noopener"
       className={`link-inline inline-flex items-center gap-1 ${compact ? 'text-xs' : 'text-sm'} ${className ?? ''}`}
+      data-tour="explorer-link"
     >
       {label}
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className="shrink-0">

@@ -87,7 +87,13 @@ export function Onboarding() {
               own wallet, an on-chain balance you can verify, not a database IOU.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button type="button" onClick={createWallet} disabled={creating} className="btn btn-hero btn-primary">
+              <button
+                type="button"
+                onClick={createWallet}
+                disabled={creating}
+                className="btn btn-hero btn-primary"
+                data-tour="create-wallet"
+              >
                 {creating ? 'Creating your wallet…' : 'Create my self-custody wallet'}
               </button>
               <button
