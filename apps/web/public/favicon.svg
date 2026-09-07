@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-label="NairaStock">
+  <!--
+    NairaStock mark — three ascending bars crossed by the naira double-stroke.
+    The crossbars are what make it read as ₦ rather than a generic bar chart;
+    the ascending heights carry the market. Drawn as geometry (no <text>) so it
+    renders identically without the brand font, and mono so it inverts cleanly
+    on the dark hero band.
+  -->
+  <rect width="40" height="40" rx="11" fill="#0052ff"/>
+  <g fill="#ffffff">
+    <rect x="10.4" y="21.6" width="4" height="8.4" rx="1.6"/>
+    <rect x="18" y="16.4" width="4" height="13.6" rx="1.6"/>
+    <rect x="25.6" y="10" width="4" height="20" rx="1.6"/>
+    <rect x="8.6" y="21.9" width="22.8" height="2.2" rx="1.1"/>
+    <rect x="8.6" y="25.6" width="22.8" height="2.2" rx="1.1"/>
+  </g>
+</svg>
