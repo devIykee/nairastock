@@ -1,0 +1,36 @@
+{
+  "name": "nairastock",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-custody neobroker for Coinbase Tokenized Stocks on Base, funded in naira (cNGN)",
+  "packageManager": "pnpm@11.20.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c cyan,magenta \"pnpm -F @nairastock/api start:dev\" \"pnpm -F @nairastock/web dev\"",
+    "build": "pnpm -F @nairastock/shared build && pnpm -F @nairastock/api build && pnpm -F @nairastock/web build",
+    "test": "pnpm -F @nairastock/api test",
+    "test:contracts": "cd contracts && forge test -vv",
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "infra:up": "docker compose up -d && pnpm infra:wait",
+    "infra:wait": "node scripts/wait-for-infra.mjs",
+    "infra:down": "docker compose down",
+    "infra:nuke": "docker compose down -v",
+    "chain:up": "anvil --host 0.0.0.0 --port 8545 --chain-id 31337 --block-time 2",
+    "chain:build": "cd contracts && forge build",
+    "chain:deploy": "cd contracts && pnpm deploy:local",
+    "chain:deploy:sepolia": "cd contracts && pnpm deploy:sepolia",
+    "db:generate": "pnpm -F @nairastock/api prisma:generate",
+    "db:migrate": "pnpm -F @nairastock/api prisma:migrate",
+    "db:deploy": "pnpm -F @nairastock/api prisma:deploy",
+    "db:seed": "pnpm -F @nairastock/api prisma:seed",
+    "db:reset": "pnpm -F @nairastock/api prisma:reset",
+    "setup": "node scripts/setup.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "8.2.2",
+    "typescript": "5.7.3"
+  }
+}

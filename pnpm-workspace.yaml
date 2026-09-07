@@ -1,0 +1,35 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  - "contracts"
+
+# pnpm 11 requires build scripts to be opted into explicitly.
+allowBuilds:
+  esbuild: true
+  "@prisma/client": true
+  "@prisma/engines": true
+  prisma: true
+  "@nestjs/core": true
+  "@scarf/scarf": true
+  "@tailwindcss/oxide": true
+  unrs-resolver: true
+  bufferutil: true
+  utf-8-validate: true
+  # Optional native accelerator for msgpackr (BullMQ's serializer). The pure-JS
+  # fallback is plenty for our job volume, so skip the native build.
+  msgpackr-extract: false
+
+onlyBuiltDependencies:
+  - "@prisma/client"
+  - "@prisma/engines"
+  - prisma
+  - esbuild
+  - "@nestjs/core"
+  - "@scarf/scarf"
+  - bufferutil
+  - utf-8-validate
+  - unrs-resolver
+  - "@tailwindcss/oxide"
+  - secp256k1
+  - keccak
+  - tiny-secp256k1
