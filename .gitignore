@@ -33,3 +33,9 @@ coverage/
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Windows metadata (Zone.Identifier artifacts from downloading fonts)
+*:Zone.Identifier
+
+# local font source (the shipped copies live in apps/web/public/fonts/)
+/acorn/
