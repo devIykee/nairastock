@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api, ApiError, auth } from '@/lib/api';
+import { useTheme } from '@/lib/theme';
 import { AssetIcon } from '@/components/AssetIcon';
 import { ErrorNotice } from '@/components/ErrorNotice';
 import { formatNgn, formatPercent, percentTone } from '@/lib/format';
@@ -46,6 +47,7 @@ const FAQ: { q: string; a: string }[] = [
 
 export function Onboarding() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
@@ -75,14 +77,14 @@ export function Onboarding() {
   return (
     <div>
       {/* Hero, dark, title-case, Coinbase-institutional */}
-      <section className="relative overflow-hidden" style={{ backgroundColor: 'var(--color-surface-dark)' }}>
+      <section className="relative overflow-hidden" style={{ backgroundColor: theme === 'dark' ? 'var(--color-surface-dark)' : '#0a0b0d' }}>
         <div className="shell py-20 md:py-28">
           <div className="max-w-3xl">
-            <h1 className="display-mega" style={{ color: 'var(--color-on-dark)' }}>
+            <h1 className="display-mega" style={{ color: theme === 'dark' ? 'var(--color-on-dark)' : '#f9fafb' }}>
               Own real US stocks,<br />
               in naira, on Base.
             </h1>
-            <p className="mt-6 max-w-xl" style={{ color: 'var(--color-on-dark-soft)', fontSize: '1.125rem', lineHeight: 1.6 }}>
+            <p className="mt-6 max-w-xl" style={{ color: theme === 'dark' ? 'var(--color-on-dark-soft)' : 'rgba(249, 250, 251, 0.76)', fontSize: '1.125rem', lineHeight: 1.6 }}>
               Fund with cNGN. Trade tokenized equities any hour. Hold them in your
               own wallet, an on-chain balance you can verify, not a database IOU.
             </p>

@@ -19,7 +19,10 @@ export function TopNav({ children }: PropsWithChildren) {
   return (
     <header
       className="sticky top-0 z-30 backdrop-blur-md"
-      style={{ backgroundColor: 'rgba(255,255,255,0.82)', borderBottom: '1px solid var(--color-hairline)' }}
+      style={{
+        backgroundColor: theme === 'dark' ? 'rgba(15, 17, 21, 0.82)' : 'rgba(255, 255, 255, 0.82)',
+        borderBottom: '1px solid var(--color-hairline)'
+      }}
     >
       <div className="shell flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-8">
