@@ -1,0 +1,246 @@
+// NairaStock schema.
+//
+// Guiding rule: the chain is the source of truth for anything a user owns.
+// Balances live in `Balance` only as a read cache so the dashboard can paint
+// before the RPC round-trip returns; every value is re-read from chain on load
+// and the row is overwritten. Nothing here is a ledger the user has to trust.
+//
+// All token amounts are stored as strings in base units (wei-scale integers),
+// never as Decimal/Float: 1e18-scale values overflow Float, and Prisma Decimal
+// round-trips through JS numbers in enough places to make it a bad bet for money.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+enum CustodyMode {
+  /// Hackathon demo path: the API holds an AES-256-GCM-encrypted mnemonic so it
+  /// can sign swaps without a browser extension. Documented as a demo shortcut.
+  DEMO_CUSTODIAL
+  /// Production path: the key never left the client. The API only reads chain
+  /// state and never holds key material for this user.
+  SELF_SIGNED
+}
+
+enum TokenKind {
+  STABLECOIN
+  STOCK
+}
+
+enum TransactionType {
+  DEPOSIT
+  BUY
+  SELL
+  WITHDRAW
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+// ── Users & wallets ──────────────────────────────────────────────────────────
+
+model User {
+  id            String      @id @default(uuid())
+  /// EIP-55 checksummed. Unique per user — this is the login identity.
+  walletAddress String      @unique
+  custodyMode   CustodyMode @default(DEMO_CUSTODIAL)
+
+  /// AES-256-GCM envelope (JSON: {v, salt, iv, tag, ct}) or null for
+  /// SELF_SIGNED users. Never a plaintext mnemonic, never logged.
+  encryptedMnemonic String?
+  derivationPath    String  @default("m/44'/60'/0'/0/0")
+
+  /// Set once the user confirms they wrote the phrase down, so the UI can stop
+  /// nagging without re-showing the secret.
+  mnemonicBackedUp Boolean @default(false)
+  isDemoUser       Boolean @default(false)
+
+  wallets      Wallet[]
+  balances     Balance[]
+  transactions Transaction[]
+  authNonces   AuthNonce[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
+/// A user may eventually hold addresses on several chains (the MCW derivation
+/// pattern is multi-account off one seed), so the address/chain pair is modelled
+/// separately from the login identity on User.
+model Wallet {
+  id      String @id @default(uuid())
+  address String
+  chainId Int
+  /// BIP44 account index within the user's seed.
+  accountIndex Int    @default(0)
+  label        String @default("Main")
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([address, chainId])
+  @@index([userId])
+}
+
+/// Short-lived login challenge. Wallet-signature auth: the client signs
+/// `message`, the API recovers the signer and compares it to `address`.
+model AuthNonce {
+  id      String @id @default(uuid())
+  address String
+  nonce   String @unique
+  message String
+
+  consumedAt DateTime?
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([address, expiresAt])
+}
+
+// ── Tradeable universe ───────────────────────────────────────────────────────
+
+model Token {
+  id       String    @id @default(uuid())
+  symbol   String
+  name     String
+  kind     TokenKind
+  /// Contract address on `chainId`, EIP-55 checksummed.
+  address  String
+  chainId  Int
+  decimals Int       @default(18)
+  logoUrl  String?
+
+  /// Chainlink-compatible aggregator. Null for cNGN (the naira unit of account).
+  chainlinkFeedAddress String?
+  /// Underlying equity ticker, e.g. AAPL for AAPLc.
+  underlyingSymbol     String?
+  /// Copy shown on the stock detail screen.
+  blurb                String?
+
+  /// True while pointed at mock contracts rather than mainnet B20 tokens. The
+  /// UI reads this to render the "Testnet Demo" badge honestly.
+  isTestnetMock Boolean @default(true)
+  isActive      Boolean @default(true)
+  sortOrder     Int     @default(0)
+
+  balances       Balance[]
+  priceSnapshots PriceSnapshot[]
+  txAsTokenIn    Transaction[]   @relation("TransactionTokenIn")
+  txAsTokenOut   Transaction[]   @relation("TransactionTokenOut")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([symbol, chainId])
+  @@unique([address, chainId])
+  @@index([kind, isActive])
+}
+
+/// Read-through cache of on-chain ERC20 balances. Overwritten on every sync;
+/// safe to truncate at any time. `syncedAtBlock` records which block the
+/// snapshot came from so a stale read is detectable.
+model Balance {
+  id      String @id @default(uuid())
+  userId  String
+  tokenId String
+
+  /// Base units as a decimal string, e.g. "2691398377170462969".
+  amount        String @default("0")
+  syncedAtBlock BigInt @default(0)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token Token @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([userId, tokenId])
+  @@index([userId])
+}
+
+// ── Activity ─────────────────────────────────────────────────────────────────
+
+model Transaction {
+  id     String            @id @default(uuid())
+  userId String
+  type   TransactionType
+  status TransactionStatus @default(PENDING)
+
+  tokenInId  String?
+  tokenOutId String?
+
+  /// Base units. amountOut is null until the receipt is parsed.
+  amountIn     String?
+  amountOut    String?
+  minAmountOut String?
+
+  txHash      String? @unique
+  chainId     Int
+  blockNumber BigInt?
+  gasUsed     String?
+
+  /// Quote context, kept so a filled order can be compared against what the
+  /// user was shown — the difference between promised and realised execution.
+  quotedAmountOut String?
+  slippageBps     Int?
+  priceUsd        String?
+  priceNgn        String?
+  ngnAmount       String?
+
+  /// Human-readable reason on FAILED, e.g. "slippage exceeded".
+  failureReason String?
+  failureCode   String?
+
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenIn  Token? @relation("TransactionTokenIn", fields: [tokenInId], references: [id])
+  tokenOut Token? @relation("TransactionTokenOut", fields: [tokenOutId], references: [id])
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  confirmedAt DateTime?
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+/// Price history behind the 24h chart. Written by the BullMQ pricing job every
+/// PRICE_POLL_INTERVAL_MS from each token's aggregator.
+model PriceSnapshot {
+  id      String @id @default(uuid())
+  tokenId String
+
+  /// Decimal strings — USD with 8dp from the feed, NGN derived at NGN_USD_RATE.
+  priceUsd String
+  priceNgn String
+  /// FX rate used, recorded so a historical point stays interpretable if the
+  /// rate changes.
+  ngnUsdRate String
+
+  /// Chainlink round id, or the mock aggregator's round. Null if unavailable.
+  roundId String?
+  /// True when the answer came from the simulated testnet aggregator.
+  simulated Boolean @default(true)
+
+  token Token @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+
+  timestamp DateTime @default(now())
+
+  @@index([tokenId, timestamp])
+}
