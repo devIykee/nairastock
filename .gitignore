@@ -20,6 +20,13 @@ apps/api/prisma/*.db
 contracts/out/
 contracts/cache/
 contracts/broadcast/
+
+# OS and editor metadata
+*:Zone.Identifier
+.DS_Store
+
+# Duplicate font sources (real fonts are in apps/web/public/fonts/)
+acorn/
 contracts/lib/
 
 # logs / scratch
